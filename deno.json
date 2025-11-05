@@ -1,0 +1,21 @@
+{
+  "name": "@bobvanderlinden/oauth2cli",
+  "version": "0.1.0",
+  "exports": "./main.ts",
+  "tasks": {
+    "dev": "deno run --allow-net --allow-read --allow-write --allow-env main.ts",
+    "start": "deno run --allow-net --allow-read --allow-write --allow-env main.ts"
+  },
+  "imports": {
+    "@std/encoding": "jsr:@std/encoding@^1.0.5",
+    "@std/html": "jsr:@std/html@^1.0.5",
+    "@std/path": "jsr:@std/path@^1.0.8",
+    "@std/cli": "jsr:@std/cli@^1.0.9",
+    "@std/fs": "jsr:@std/fs@^1.0.8",
+    "@zod/zod": "jsr:@zod/zod@^4.1.12",
+    "open": "https://deno.land/x/open@v1.0.0/index.ts"
+  },
+  "compilerOptions": {
+    "lib": ["deno.window", "dom"]
+  }
+}
