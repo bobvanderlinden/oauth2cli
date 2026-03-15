@@ -13,6 +13,7 @@ import type { SessionData } from "./session.ts";
 
 interface CLIOptions {
   clientId: string;
+  clientSecret?: string;
   pkce: boolean;
   redirectUrl: string;
   sessionFile: string;
@@ -25,6 +26,7 @@ function printUsage(): void {
 
 Options:
   --client-id <ID>         OAuth2 client ID (required)
+  --client-secret <SECRET> OAuth2 client secret (optional)
   --redirect-url <URL>     Redirect URL for OAuth2 callback (required)
   --session <FILE>         Session file path (required)
   --pkce                   Use PKCE flow (recommended)
@@ -44,6 +46,7 @@ Example:
 const cliOptionsSchema = z
   .object({
     "client-id": z.string().min(1, "Missing required argument --client-id"),
+    "client-secret": z.string().optional(),
     "redirect-url": z.url({ message: "Invalid URL format for --redirect-url" }),
     session: z.string().min(1, "Missing required argument --session"),
     pkce: z.boolean().default(false),
@@ -52,6 +55,7 @@ const cliOptionsSchema = z
   })
   .transform((args) => ({
     clientId: args["client-id"],
+    clientSecret: args["client-secret"],
     redirectUrl: args["redirect-url"],
     sessionFile: args.session,
     pkce: args.pkce,
@@ -62,7 +66,7 @@ const cliOptionsSchema = z
 function parseCliArgs(): CLIOptions {
   const args = parseArgs(Deno.args, {
     boolean: ["pkce", "help"],
-    string: ["client-id", "redirect-url", "session", "scope"],
+    string: ["client-id", "client-secret", "redirect-url", "session", "scope"],
     alias: {
       h: "help",
     },

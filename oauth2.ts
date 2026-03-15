@@ -5,6 +5,7 @@ import { waitForCallback } from "./server.ts";
 
 export interface OAuth2Config {
   clientId: string;
+  clientSecret?: string;
   authorizationEndpoint: string;
   tokenEndpoint: string;
   redirectUrl: string;
@@ -100,6 +101,10 @@ async function exchangeCodeForToken(
   body.set("redirect_uri", config.redirectUrl);
   body.set("client_id", config.clientId);
 
+  if (config.clientSecret) {
+    body.set("client_secret", config.clientSecret);
+  }
+
   if (codeVerifier) {
     body.set("code_verifier", codeVerifier);
   }
@@ -128,6 +133,10 @@ export async function refreshAccessToken(
   body.set("grant_type", "refresh_token");
   body.set("refresh_token", refreshToken);
   body.set("client_id", config.clientId);
+
+  if (config.clientSecret) {
+    body.set("client_secret", config.clientSecret);
+  }
 
   const response = await fetch(config.tokenEndpoint, {
     method: "POST",
