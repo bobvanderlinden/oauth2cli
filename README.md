@@ -1,34 +1,35 @@
 # oauth2cli
 
-A command-line tool to authenticate using OAuth2.
-
-To be [combined with curl](#using-with-curl) to more easily call authenticated API.
+A command-line tool to authenticate with OAuth2 and print an access token for
+`curl`.
 
 ## Features
 
-- OAuth2 authorization code flow with PKCE support
+- OAuth2 authorization code flow with PKCE
 - Automatic token refresh
-- Session persistence to file
-- Built-in callback server for OAuth2 redirects
-- Automatic discovery of OAuth2 endpoints via `.well-known` URLs
-- Outputs the access token to stdout (for shell command substitution)
+- System keyring session storage
+- File session storage for headless and CI use
+- Local callback server for OAuth2 redirects
+- OAuth2 endpoint discovery through `.well-known` URLs
 
 ## Requirements
 
 - [Deno](https://deno.com/)
+- A system keyring. Linux uses the Secret Service API, macOS uses Keychain, and
+  Windows uses Credential Manager.
 
 ## Installation
 
-Install executable to `~/.deno/bin`:
+Install an executable to `~/.deno/bin`:
 
 ```bash
-deno install --allow-net --allow-read --allow-write --allow-run --name oauth2cli main.ts
+deno install --allow-net --allow-read --allow-write --allow-run --allow-env --allow-ffi --allow-sys --name oauth2cli main.ts
 ```
 
-Or, use `main.ts` directly:
+Or run `main.ts` directly:
 
 ```bash
-deno run --allow-net --allow-read --allow-write --allow-run main.ts
+deno run --allow-net --allow-read --allow-write --allow-run --allow-env --allow-ffi --allow-sys main.ts
 ```
 
 ## Usage
@@ -37,19 +38,19 @@ deno run --allow-net --allow-read --allow-write --allow-run main.ts
 oauth2cli [OPTIONS] <ISSUER_URL>
 ```
 
-## Usage
+Sessions use the system keyring by default. The key is derived from the issuer
+URL, client ID, and requested scope. Pass `--session` to store the session in a
+file instead.
 
 ```bash
 oauth2cli \
-  --client-id <CLIENT_ID> \
-  --redirect-url <REDIRECT_URL> \
-  --session <SESSION_FILE> \
-  [--pkce] \
-  [--scope <SCOPE>] \
-  <ISSUER_URL>
+  --client-id myapp \
+  --pkce \
+  --redirect-url http://localhost:3000/oauth2/callback \
+  https://myoauthserver/
 ```
 
-### Example
+For CI or a machine without a keyring:
 
 ```bash
 oauth2cli \
@@ -62,32 +63,24 @@ oauth2cli \
 
 ### Using with curl
 
-`oauth2cli` outputs the access token to stdout, which can be combined with curl to call authorized APIs:
+`oauth2cli` writes the access token to standard output:
 
 ```bash
 curl \
-  --header "Authorization: Bearer $(oauth2cli --client-id myapp --pkce --redirect-url http://localhost:3000/oauth2/callback --session .session.json https://myoauthserver/)" \
+  --header "Authorization: Bearer $(oauth2cli --client-id myapp --pkce --redirect-url http://localhost:3000/oauth2/callback https://myoauthserver/)" \
   https://myoauthserver/some/authenticated/api
 ```
 
 ## Options
 
-- `--client-id <ID>` - OAuth2 client ID (required)
-- `--redirect-url <URL>` - Redirect URL for OAuth2 callback (required)
-- `--session <FILE>` - Session file path for storing tokens (required)
-- `--pkce` - Use PKCE (Proof Key for Code Exchange) flow (recommended for security)
-- `--scope <SCOPE>` - OAuth2 scope (optional)
-- `--help` - Show help message
-
-## How It Works
-
-1. **First run**: Opens a browser for OAuth2 authentication, starts a local server to receive the OAuth callback, exchanges the authorization code for tokens, and saves them to the session file
-2. **Subsequent runs**: Checks if the stored token is still valid
-   - If valid: Outputs the access token immediately
-   - If expired but refresh token exists: Refreshes the token automatically
-   - If refresh fails: Starts a new authorization flow
+- `--client-id <ID>`: OAuth2 client ID. Required.
+- `--client-secret <SECRET>`: OAuth2 client secret.
+- `--redirect-url <URL>`: Redirect URL for the OAuth2 callback. Required.
+- `--session <FILE>`: Store tokens in this file instead of the system keyring.
+- `--pkce`: Use PKCE.
+- `--scope <SCOPE>`: OAuth2 scope.
+- `--help`: Show help.
 
 ## License
 
 MIT
-

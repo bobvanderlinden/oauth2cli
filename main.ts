@@ -1,4 +1,4 @@
-#!/usr/bin/env -S deno run --allow-net --allow-read --allow-write --allow-run
+#!/usr/bin/env -S deno run --allow-net --allow-read --allow-write --allow-run --allow-env --allow-ffi --allow-sys
 
 import { parseArgs } from "@std/cli/parse-args";
 import { z } from "@zod/zod";
@@ -8,15 +8,21 @@ import {
   performAuthorizationFlow,
   refreshAccessToken,
 } from "./oauth2.ts";
-import { isSessionValid, loadSession, saveSession } from "./session.ts";
-import type { SessionData } from "./session.ts";
+import {
+  isSessionValid,
+  loadKeyringSession,
+  loadSession,
+  saveKeyringSession,
+  saveSession,
+} from "./session.ts";
+import type { SessionData, SessionKey } from "./session.ts";
 
 interface CLIOptions {
   clientId: string;
   clientSecret?: string;
   pkce: boolean;
   redirectUrl: string;
-  sessionFile: string;
+  sessionFile?: string;
   issuerUrl: string;
   scope?: string;
 }
@@ -28,7 +34,7 @@ Options:
   --client-id <ID>         OAuth2 client ID (required)
   --client-secret <SECRET> OAuth2 client secret (optional)
   --redirect-url <URL>     Redirect URL for OAuth2 callback (required)
-  --session <FILE>         Session file path (required)
+  --session <FILE>         Session file path, instead of the system keyring
   --pkce                   Use PKCE flow (recommended)
   --scope <SCOPE>          OAuth2 scope (optional)
   --help                   Show this help message
@@ -48,7 +54,7 @@ const cliOptionsSchema = z
     "client-id": z.string().min(1, "Missing required argument --client-id"),
     "client-secret": z.string().optional(),
     "redirect-url": z.url({ message: "Invalid URL format for --redirect-url" }),
-    session: z.string().min(1, "Missing required argument --session"),
+    session: z.string().min(1).optional(),
     pkce: z.boolean().default(false),
     scope: z.string().optional(),
     _: z.tuple([z.url({ message: "Invalid URL format for ISSUER_URL" })]),
@@ -92,16 +98,41 @@ function parseCliArgs(): CLIOptions {
   }
 }
 
+interface SessionStore {
+  load(): Promise<SessionData | null>;
+  save(session: SessionData): Promise<void>;
+}
+
+function getSessionStore(options: CLIOptions): SessionStore {
+  if (options.sessionFile) {
+    const sessionFile = options.sessionFile;
+    return {
+      load: () => loadSession(sessionFile),
+      save: (session) => saveSession(sessionFile, session),
+    };
+  }
+
+  const sessionKey: SessionKey = {
+    clientId: options.clientId,
+    issuerUrl: options.issuerUrl,
+    scope: options.scope,
+  };
+  return {
+    load: () => loadKeyringSession(sessionKey),
+    save: (session) => saveKeyringSession(sessionKey, session),
+  };
+}
+
 async function getFreshAccessToken(
   config: OAuth2Config,
-  sessionFile: string
+  sessionStore: SessionStore,
 ): Promise<string> {
-  const loadedSession = await loadSession(sessionFile);
+  const loadedSession = await sessionStore.load();
 
   const validSession = await ensureFreshSession(config, loadedSession);
 
   if (loadedSession !== validSession) {
-    await saveSession(sessionFile, validSession);
+    await sessionStore.save(validSession);
   }
 
   return validSession.accessToken;
@@ -109,7 +140,7 @@ async function getFreshAccessToken(
 
 async function ensureFreshSession(
   config: OAuth2Config,
-  session: SessionData | null
+  session: SessionData | null,
 ): Promise<SessionData> {
   if (!session) {
     return await performAuthorizationFlow(config);
@@ -126,7 +157,7 @@ async function ensureFreshSession(
       console.error(
         `Failed to refresh token: ${
           error instanceof Error ? error.message : String(error)
-        }`
+        }`,
       );
     }
   }
@@ -146,11 +177,14 @@ async function main(): Promise<void> {
       ...options,
     };
 
-    const accessToken = await getFreshAccessToken(config, options.sessionFile);
+    const accessToken = await getFreshAccessToken(
+      config,
+      getSessionStore(options),
+    );
     console.log(accessToken);
   } catch (error) {
     console.error(
-      `Error: ${error instanceof Error ? error.message : String(error)}`
+      `Error: ${error instanceof Error ? error.message : String(error)}`,
     );
     Deno.exit(1);
   }

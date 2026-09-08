@@ -9,8 +9,14 @@ export interface SessionData {
   scope?: string;
 }
 
+export interface SessionKey {
+  clientId: string;
+  issuerUrl: string;
+  scope?: string;
+}
+
 export async function loadSession(
-  filePath: string
+  filePath: string,
 ): Promise<SessionData | null> {
   try {
     const data = await Deno.readTextFile(filePath);
@@ -25,11 +31,45 @@ export async function loadSession(
 
 export async function saveSession(
   filePath: string,
-  session: SessionData
+  session: SessionData,
 ): Promise<void> {
   const dir = dirname(filePath);
   await ensureDir(dir);
   await Deno.writeTextFile(filePath, JSON.stringify(session, null, 2));
+}
+
+async function getKeyringEntry(sessionKey: SessionKey) {
+  const { Entry } = await import("@napi-rs/keyring");
+  const account = await getKeyringAccount(sessionKey);
+  return new Entry("oauth2cli", account);
+}
+
+async function getKeyringAccount(sessionKey: SessionKey): Promise<string> {
+  const text = JSON.stringify(sessionKey);
+  const hash = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(text),
+  );
+  return Array.from(
+    new Uint8Array(hash),
+    (byte) => byte.toString(16).padStart(2, "0"),
+  ).join("");
+}
+
+export async function loadKeyringSession(
+  sessionKey: SessionKey,
+): Promise<SessionData | null> {
+  const entry = await getKeyringEntry(sessionKey);
+  const data = entry.getPassword();
+  return data ? (JSON.parse(data) as SessionData) : null;
+}
+
+export async function saveKeyringSession(
+  sessionKey: SessionKey,
+  session: SessionData,
+): Promise<void> {
+  const entry = await getKeyringEntry(sessionKey);
+  entry.setPassword(JSON.stringify(session));
 }
 
 export function isSessionValid(session: SessionData): boolean {
