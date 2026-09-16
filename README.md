@@ -38,9 +38,9 @@ deno run --allow-net --allow-read --allow-write --allow-run --allow-env --allow-
 oauth2cli [OPTIONS] <ISSUER_URL>
 ```
 
-Sessions use the system keyring by default. The key is derived from the issuer
-URL, client ID, and requested scope. Pass `--session` to store the session in a
-file instead.
+Sessions use the system keyring by default. Pass `--keyring` to make that
+choice explicit. The key is derived from the issuer URL, client ID, and
+requested scope. Pass `--session` to store the session in a file instead.
 
 ```bash
 oauth2cli \
@@ -76,6 +76,7 @@ curl \
 - `--client-id <ID>`: OAuth2 client ID. Required.
 - `--client-secret <SECRET>`: OAuth2 client secret.
 - `--redirect-url <URL>`: Redirect URL for the OAuth2 callback. Required.
+- `--keyring`: Store tokens in the system keyring. This is the default.
 - `--session <FILE>`: Store tokens in this file instead of the system keyring.
 - `--pkce`: Use PKCE.
 - `--scope <SCOPE>`: OAuth2 scope.
