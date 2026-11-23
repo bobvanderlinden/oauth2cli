@@ -18,7 +18,7 @@ export interface CallbackServerOptions {
  */
 async function serve(
   options: Deno.ServeTcpOptions,
-  handler: Deno.ServeHandler
+  handler: Deno.ServeHandler,
 ): Promise<Deno.HttpServer> {
   const { promise, resolve } = Promise.withResolvers<void>();
 
@@ -30,7 +30,7 @@ async function serve(
         resolve();
       },
     },
-    handler
+    handler,
   );
 
   await promise;
@@ -115,7 +115,7 @@ export async function waitForCallback({
     // Validate state
     if (state !== expectedState) {
       return authenticationFailedResponse(
-        "Invalid state parameter. Authentication failed."
+        "Invalid state parameter. Authentication failed.",
       );
     }
 
@@ -123,7 +123,7 @@ export async function waitForCallback({
       return authenticationFailedResponse(
         errorDescription
           ? `Error: ${error}. Description: ${errorDescription}`
-          : `Error: ${error}`
+          : `Error: ${error}`,
       );
     }
 

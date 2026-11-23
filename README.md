@@ -38,9 +38,9 @@ deno run --allow-net --allow-read --allow-write --allow-run --allow-env --allow-
 oauth2cli [OPTIONS] <ISSUER_URL>
 ```
 
-Sessions use the system keyring by default. Pass `--keyring` to make that
-choice explicit. The key is derived from the issuer URL, client ID, and
-requested scope. Pass `--session` to store the session in a file instead.
+Sessions use the system keyring by default. Pass `--keyring` to make that choice
+explicit. The key is derived from the issuer URL, client ID, and requested
+scope. Pass `--session` to store the session in a file instead.
 
 ```bash
 oauth2cli \

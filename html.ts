@@ -24,6 +24,6 @@ export function html(
   ...values: unknown[]
 ): Html {
   return new Html(
-    strings.reduce((result, str, i) => result + str + toHtml(values[i]), "")
+    strings.reduce((result, str, i) => result + str + toHtml(values[i]), ""),
   );
 }

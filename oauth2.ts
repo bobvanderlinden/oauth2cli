@@ -35,7 +35,7 @@ async function sha256(plain: string): Promise<string> {
 }
 
 export async function performAuthorizationFlow(
-  config: OAuth2Config
+  config: OAuth2Config,
 ): Promise<SessionData> {
   const state = generateRandomString(32);
   let codeVerifier: string | undefined;
@@ -72,13 +72,13 @@ export async function performAuthorizationFlow(
       // Open browser
       console.error(`Opening browser for authentication...`);
       console.error(
-        `If the browser doesn't open, visit: ${authUrl.toString()}`
+        `If the browser doesn't open, visit: ${authUrl.toString()}`,
       );
       try {
         await open(authUrl.toString());
       } catch {
         console.error(
-          `Failed to open browser. Please visit: ${authUrl.toString()}`
+          `Failed to open browser. Please visit: ${authUrl.toString()}`,
         );
       }
     },
@@ -93,7 +93,7 @@ export async function performAuthorizationFlow(
 async function exchangeCodeForToken(
   config: OAuth2Config,
   code: string,
-  codeVerifier?: string
+  codeVerifier?: string,
 ): Promise<TokenResponse> {
   const body = new URLSearchParams();
   body.set("grant_type", "authorization_code");
@@ -127,7 +127,7 @@ async function exchangeCodeForToken(
 
 export async function refreshAccessToken(
   config: OAuth2Config,
-  refreshToken: string
+  refreshToken: string,
 ): Promise<SessionData> {
   const body = new URLSearchParams();
   body.set("grant_type", "refresh_token");
@@ -170,7 +170,7 @@ function tokenResponseToSession(tokenData: TokenResponse): SessionData {
 }
 
 export async function discoverOAuth2Endpoints(
-  issuerUrl: string
+  issuerUrl: string,
 ): Promise<{ authorizationEndpoint: string; tokenEndpoint: string }> {
   const baseUrl = new URL(issuerUrl);
 
@@ -194,7 +194,7 @@ export async function discoverOAuth2Endpoints(
   try {
     const discoveryUrl = new URL(
       "/.well-known/oauth-authorization-server",
-      baseUrl
+      baseUrl,
     );
     const response = await fetch(discoveryUrl);
 
