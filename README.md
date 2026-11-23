@@ -14,11 +14,36 @@ A command-line tool to authenticate with OAuth2 and print an access token for
 
 ## Requirements
 
-- [Deno](https://deno.com/)
+- [Nix](https://nixos.org/) or [Deno](https://deno.com/)
 - A system keyring. Linux uses the Secret Service API, macOS uses Keychain, and
   Windows uses Credential Manager.
 
 ## Installation
+
+### Nix
+
+The flake builds a standalone executable for x86_64 and aarch64 Linux and for
+aarch64 macOS.
+
+Install it into your profile:
+
+```bash
+nix profile install github:bobvanderlinden/oauth2cli
+```
+
+Run it without installing:
+
+```bash
+nix run github:bobvanderlinden/oauth2cli -- --help
+```
+
+Or start a shell with `oauth2cli` available:
+
+```bash
+nix shell github:bobvanderlinden/oauth2cli
+```
+
+### Deno
 
 Install an executable to `~/.deno/bin`:
 

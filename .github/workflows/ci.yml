@@ -20,8 +20,19 @@ jobs:
       - run: deno lint
       - run: deno check main.ts
 
+  nix:
+    strategy:
+      matrix:
+        runner: [ubuntu-latest, ubuntu-24.04-arm, macos-latest]
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: cachix/install-nix-action@v32
+      - run: nix build --print-build-logs
+      - run: nix run . -- --help
+
   release:
-    needs: check
+    needs: [check, nix]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
