@@ -1,6 +1,5 @@
 {
   "name": "@bobvanderlinden/oauth2cli",
-  "version": "0.1.0",
   "exports": "./main.ts",
   "tasks": {
     "dev": "deno run --allow-net --allow-read --allow-write --allow-run --allow-env --allow-ffi --allow-sys main.ts",
